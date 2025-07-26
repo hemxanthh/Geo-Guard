@@ -11,6 +11,15 @@ const io = new Server(server, {
 });
 const port = 3001;
 
+// Add error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // --- Vehicle & Trip State ---
 let activeTripId = null;
 const vehicleStatus = {
@@ -48,6 +57,15 @@ app.use(express.json());
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   socket.emit('vehicleUpdate', vehicleStatus); // Send current status immediately
+});
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'Server running', 
+    timestamp: new Date().toISOString(),
+    vehicleStatus: vehicleStatus 
+  });
 });
 
 // API Routes

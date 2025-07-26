@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Icon, LatLngTuple } from 'leaflet';
-import { MapPin, Navigation, Battery, Signal, Clock, Crosshair } from 'lucide-react';
+import { MapPin, Navigation, Battery, Clock, Crosshair } from 'lucide-react';
 import { useSocket } from '../../contexts/SocketContext';
 import { VehicleStatus, Location } from '../../types';
 import { clsx } from 'clsx';
@@ -10,6 +10,14 @@ import 'leaflet/dist/leaflet.css';
 // Fix for default markers in react-leaflet
 import markerIconPng from 'leaflet/dist/images/marker-icon.png';
 import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix Leaflet's default icon paths
+Icon.Default.prototype.options.iconUrl = markerIconPng;
+Icon.Default.prototype.options.shadowUrl = markerShadowPng;
+Icon.Default.prototype.options.iconSize = [25, 41];
+Icon.Default.prototype.options.iconAnchor = [12, 41];
+Icon.Default.prototype.options.popupAnchor = [1, -34];
+Icon.Default.prototype.options.shadowSize = [41, 41];
 
 // Create custom vehicle icon
 const createVehicleIcon = (isMoving: boolean, heading: number = 0) => {
@@ -41,17 +49,21 @@ const DUMMY_ROUTE: Location[] = Array.from({ length: 16 }, (_, i) => ({
   longitude: 77.2090 + (i * 0.0003),
   speed: 10, // slow speed, ~10km/h
   heading: 45,
+  timestamp: new Date(),
 }));
 
 const DUMMY_BASE: Omit<VehicleStatus, 'location'> = {
-  id: 'dummy-vehicle',
+  vehicleId: 'dummy-vehicle',
   isMoving: true,
   batteryLevel: 65,
   ignitionOn: true,
-  lastUpdate: new Date().toISOString(),
+  engineLocked: false,
+  gsmSignal: 85,
+  gpsSignal: 95,
+  lastUpdate: new Date(),
 };
 
-const LiveMap: React.FC<LiveMapProps> = ({ vehicleId }) => {
+const LiveMap: React.FC<LiveMapProps> = () => {
   const { vehicleStatus, connected } = useSocket?.() || { vehicleStatus: {}, connected: false };
   const [routeHistory, setRouteHistory] = useState<Location[]>([]);
   const [center, setCenter] = useState<LatLngTuple>([28.6139, 77.2090]);
@@ -72,7 +84,7 @@ const LiveMap: React.FC<LiveMapProps> = ({ vehicleId }) => {
       setDummyVehicle({
         ...DUMMY_BASE,
         location: DUMMY_ROUTE[0],
-        lastUpdate: new Date().toISOString(),
+        lastUpdate: new Date(),
       });
       setRouteHistory([DUMMY_ROUTE[0]]);
       setCenter([DUMMY_ROUTE[0].latitude, DUMMY_ROUTE[0].longitude]);
@@ -83,7 +95,7 @@ const LiveMap: React.FC<LiveMapProps> = ({ vehicleId }) => {
           setSimulating(false);
           setDummyVehicle((prev) =>
             prev
-              ? { ...prev, isMoving: false, location: DUMMY_ROUTE[DUMMY_ROUTE.length - 1], lastUpdate: new Date().toISOString() }
+              ? { ...prev, isMoving: false, location: DUMMY_ROUTE[DUMMY_ROUTE.length - 1], lastUpdate: new Date() }
               : null
           );
           return;
@@ -94,7 +106,7 @@ const LiveMap: React.FC<LiveMapProps> = ({ vehicleId }) => {
                 ...prev,
                 isMoving: true,
                 location: DUMMY_ROUTE[index],
-                lastUpdate: new Date().toISOString(),
+                lastUpdate: new Date(),
               }
             : null
         );
@@ -257,6 +269,9 @@ const LiveMap: React.FC<LiveMapProps> = ({ vehicleId }) => {
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             ref={mapRef}
+            whenReady={() => {
+              console.log('Map is ready and tiles should be loading');
+            }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

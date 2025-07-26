@@ -45,17 +45,27 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         setConnected(true);
       });
       
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        setConnected(false);
+      });
+      
       newSocket.on('welcome', (message: string) => {
         console.log('Message from server:', message);
       });
 
       newSocket.on('vehicleUpdate', (status: VehicleStatus) => {
+        console.log('Received vehicle update:', status);
         setVehicleStatus({ [status.vehicleId]: status });
       });
 
       newSocket.on('disconnect', () => {
         console.log('Disconnected from backend socket server.');
         setConnected(false);
+      });
+
+      newSocket.on('error', (error) => {
+        console.error('Socket error:', error);
       });
 
       return () => {
