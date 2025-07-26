@@ -14,8 +14,15 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
+  // Return a default value if context is undefined instead of throwing
   if (context === undefined) {
-    throw new Error('useSocket must be used within a SocketProvider');
+    console.warn('useSocket used outside of SocketProvider, returning default values');
+    return {
+      connected: false,
+      vehicleStatus: {},
+      alerts: [],
+      activeTrips: [],
+    };
   }
   return context;
 };

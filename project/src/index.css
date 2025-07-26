@@ -19,3 +19,13 @@
 .leaflet-default-icon-path {
   background-image: url('~leaflet/dist/images/marker-icon.png');
 }
+
+/* Ensure map container has proper height */
+.leaflet-container {
+  min-height: 500px;
+}
+
+/* Fix for map tiles loading */
+.leaflet-tile-pane {
+  background: #f8fafc;
+}

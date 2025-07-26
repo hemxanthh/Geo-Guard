@@ -64,7 +64,7 @@ const DUMMY_BASE: Omit<VehicleStatus, 'location'> = {
 };
 
 const LiveMap: React.FC<LiveMapProps> = () => {
-  const { vehicleStatus, connected } = useSocket?.() || { vehicleStatus: {}, connected: false };
+  const { vehicleStatus = {}, connected = false } = useSocket();
   const [routeHistory, setRouteHistory] = useState<Location[]>([]);
   const [center, setCenter] = useState<LatLngTuple>([28.6139, 77.2090]);
   const [isFollowing, setIsFollowing] = useState(true);
@@ -74,23 +74,37 @@ const LiveMap: React.FC<LiveMapProps> = () => {
   const mapRef = useRef<any>(null);
 
   // Use first real vehicle, otherwise dummy
-  const currentVehicle = Object.values(vehicleStatus)[0] || dummyVehicle;
+  const realVehicles = Object.values(vehicleStatus);
+  const currentVehicle = realVehicles.length > 0 ? realVehicles[0] : dummyVehicle;
 
   // Simulate dummy movement if no real vehicle
   useEffect(() => {
-    if (Object.keys(vehicleStatus).length === 0 && !simulating) {
+    console.log('LiveMap: Real vehicles count:', realVehicles.length);
+    console.log('LiveMap: Connected status:', connected);
+    console.log('LiveMap: Current simulating:', simulating);
+    
+    // Always start dummy simulation immediately for demo purposes
+    if (!simulating && !dummyVehicle) {
+      console.log('Starting dummy vehicle simulation...');
       setSimulating(true);
       let index = 0;
-      setDummyVehicle({
+      
+      const initialVehicle = {
         ...DUMMY_BASE,
         location: DUMMY_ROUTE[0],
         lastUpdate: new Date(),
-      });
+      };
+      
+      setDummyVehicle(initialVehicle);
       setRouteHistory([DUMMY_ROUTE[0]]);
       setCenter([DUMMY_ROUTE[0].latitude, DUMMY_ROUTE[0].longitude]);
+      
       const interval = setInterval(() => {
         index++;
+        console.log(`Moving dummy vehicle to position ${index}/${DUMMY_ROUTE.length}`);
+        
         if (index >= DUMMY_ROUTE.length) {
+          console.log('Dummy vehicle reached end of route, stopping');
           clearInterval(interval);
           setSimulating(false);
           setDummyVehicle((prev) =>
@@ -100,23 +114,28 @@ const LiveMap: React.FC<LiveMapProps> = () => {
           );
           return;
         }
-        setDummyVehicle((prev) =>
-          prev
-            ? {
-                ...prev,
-                isMoving: true,
-                location: DUMMY_ROUTE[index],
-                lastUpdate: new Date(),
-              }
-            : null
-        );
+        
+        const newVehicle = {
+          ...DUMMY_BASE,
+          isMoving: true,
+          location: DUMMY_ROUTE[index],
+          lastUpdate: new Date(),
+        };
+        
+        setDummyVehicle(newVehicle);
         setRouteHistory((prev) => [...prev, DUMMY_ROUTE[index]]);
-        setCenter([DUMMY_ROUTE[index].latitude, DUMMY_ROUTE[index].longitude]);
-      }, 200);
-      return () => clearInterval(interval);
+        
+        if (isFollowing) {
+          setCenter([DUMMY_ROUTE[index].latitude, DUMMY_ROUTE[index].longitude]);
+        }
+      }, 1000); // Slower animation - 1 second intervals
+      
+      return () => {
+        console.log('Cleaning up dummy vehicle interval');
+        clearInterval(interval);
+      };
     }
-    // eslint-disable-next-line
-  }, [vehicleStatus, simulating]);
+  }, [simulating, dummyVehicle, isFollowing]);
 
   // Real vehicle route history and center
   useEffect(() => {
@@ -126,10 +145,17 @@ const LiveMap: React.FC<LiveMapProps> = () => {
         currentVehicle.location.longitude
       ];
       setCenter(newCenter);
-      setRouteHistory(prev => [
-        ...prev.slice(-50),
-        currentVehicle.location
-      ]);
+      
+      // Only add to route history if it's a new location
+      setRouteHistory(prev => {
+        const lastLocation = prev[prev.length - 1];
+        if (!lastLocation || 
+            lastLocation.latitude !== currentVehicle.location.latitude || 
+            lastLocation.longitude !== currentVehicle.location.longitude) {
+          return [...prev.slice(-50), currentVehicle.location];
+        }
+        return prev;
+      });
     }
   }, [currentVehicle, isFollowing]);
 
@@ -147,7 +173,7 @@ const LiveMap: React.FC<LiveMapProps> = () => {
   const routeCoordinates: LatLngTuple[] = routeHistory.map(loc => [loc.latitude, loc.longitude]);
 
   return (
-    <div className="h-full flex flex-col space-y-4">
+    <div className="h-[calc(100vh-6rem)] flex flex-col space-y-4">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -254,25 +280,29 @@ const LiveMap: React.FC<LiveMapProps> = () => {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden min-h-[600px]">
         {!currentVehicle ? (
-          <div className="h-full flex items-center justify-center">
+          <div className="h-full flex items-center justify-center min-h-[600px]">
             <div className="text-center">
               <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Waiting for vehicle data...</h3>
-              <p className="text-gray-500">Live tracking will appear when data is received</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Starting demo vehicle...</h3>
+              <p className="text-gray-500">Please wait while the simulation loads</p>
+              <div className="mt-4">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent border-solid rounded-full animate-spin mx-auto"></div>
+              </div>
             </div>
           </div>
         ) : (
-          <MapContainer
-            center={center}
-            zoom={15}
-            style={{ height: '100%', width: '100%' }}
-            ref={mapRef}
-            whenReady={() => {
-              console.log('Map is ready and tiles should be loading');
-            }}
-          >
+          <div className="h-[600px] w-full">
+            <MapContainer
+              center={center}
+              zoom={15}
+              style={{ height: '100%', width: '100%' }}
+              ref={mapRef}
+              whenReady={() => {
+                console.log('Map is ready and tiles should be loading');
+              }}
+            >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -336,7 +366,8 @@ const LiveMap: React.FC<LiveMapProps> = () => {
                 smoothFactor={1}
               />
             )}
-          </MapContainer>
+            </MapContainer>
+          </div>
         )}
       </div>
     </div>
