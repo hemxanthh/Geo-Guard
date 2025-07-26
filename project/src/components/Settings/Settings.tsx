@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
-import { User, Bell, Shield, MapPin, Smartphone, Save } from 'lucide-react';
+import { User, Bell, Shield, MapPin, Smartphone, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { clsx } from 'clsx';
 
 const Settings: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Form state for profile
+  const [profileData, setProfileData] = useState({
+    email: user?.email || '',
+    phone: user?.phone || '',
+  });
+  
   const [settings, setSettings] = useState({
     notifications: {
       smsAlerts: true,
@@ -37,13 +46,57 @@ const Settings: React.FC = () => {
     { id: 'tracking', label: 'Tracking', icon: MapPin },
   ];
 
-  const handleSave = () => {
-    // Save settings logic here
-    console.log('Settings saved:', settings);
+  const handleSave = async () => {
+    if (activeTab === 'profile') {
+      setIsLoading(true);
+      setMessage(null);
+      
+      try {
+        const result = await updateUser(profileData);
+        
+        if (result.success) {
+          setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } else {
+          setMessage({ type: 'error', text: result.error || 'Failed to update profile' });
+        }
+      } catch (error) {
+        setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Save other settings (notifications, security, tracking)
+      console.log('Settings saved:', settings);
+      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+    }
+    
+    // Clear message after 3 seconds
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const handleProfileChange = (field: string, value: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const renderProfileTab = () => (
     <div className="space-y-6">
+      {message && (
+        <div className={clsx(
+          'p-4 rounded-lg flex items-center space-x-2',
+          message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        )}>
+          {message.type === 'success' ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : (
+            <AlertCircle className="w-5 h-5" />
+          )}
+          <span>{message.text}</span>
+        </div>
+      )}
+      
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -52,24 +105,31 @@ const Settings: React.FC = () => {
             <input
               type="text"
               value={user?.username || ''}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-gray-50"
               readOnly
+              title="Username cannot be changed"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input
               type="email"
-              value={user?.email || ''}
+              value={profileData.email}
+              onChange={(e) => handleProfileChange('email', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="Enter your email address"
+              title="Enter your email address"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
             <input
               type="tel"
-              value={user?.phone || ''}
+              value={profileData.phone}
+              onChange={(e) => handleProfileChange('phone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="Enter your phone number"
+              title="Enter your phone number"
             />
           </div>
           <div>
@@ -79,6 +139,7 @@ const Settings: React.FC = () => {
               value={user?.role || ''}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
               readOnly
+              title="User role cannot be changed"
             />
           </div>
         </div>
@@ -192,6 +253,7 @@ const Settings: React.FC = () => {
                 security: { ...prev.security, sessionTimeout: parseInt(e.target.value) }
               }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              title="Select session timeout duration"
             >
               <option value={15}>15 minutes</option>
               <option value={30}>30 minutes</option>
@@ -218,6 +280,7 @@ const Settings: React.FC = () => {
                 tracking: { ...prev.tracking, updateInterval: parseInt(e.target.value) }
               }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              title="Select GPS update interval"
             >
               <option value={10}>10 seconds</option>
               <option value={30}>30 seconds</option>
@@ -240,6 +303,7 @@ const Settings: React.FC = () => {
                   tracking: { ...prev.tracking, saveRoute: e.target.checked }
                 }))}
                 className="sr-only peer"
+                title="Toggle save route history"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
@@ -306,10 +370,25 @@ const Settings: React.FC = () => {
           <div className="flex justify-end">
             <button
               onClick={handleSave}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isLoading}
+              className={clsx(
+                'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors',
+                isLoading 
+                  ? 'bg-gray-400 text-white cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              )}
             >
-              <Save className="w-4 h-4" />
-              <span>Save Changes</span>
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Changes</span>
+                </>
+              )}
             </button>
           </div>
         </div>

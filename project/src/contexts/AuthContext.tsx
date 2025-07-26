@@ -8,7 +8,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   register: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -116,13 +116,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Updates the currently logged-in user's information in the app's state
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>) => {
     if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      localStorage.setItem('vehicleGuardUser', JSON.stringify(updatedUser));
-      // NOTE: A proper implementation would also send these changes to a backend endpoint.
+      try {
+        const response = await fetch(`http://localhost:3001/user/${user.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Profile update failed');
+        }
+
+        // Update local state and localStorage with server response
+        const updatedUser = result.user;
+        setUser(updatedUser);
+        localStorage.setItem('vehicleGuardUser', JSON.stringify(updatedUser));
+        
+        return { success: true };
+      } catch (error: any) {
+        console.error('Profile update error:', error.message);
+        return { success: false, error: error.message };
+      }
     }
+    return { success: false, error: 'No user logged in' };
   };
 
   // Provide the auth data and functions to the rest of the app

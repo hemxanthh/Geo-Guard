@@ -19,113 +19,139 @@ Icon.Default.prototype.options.iconAnchor = [12, 41];
 Icon.Default.prototype.options.popupAnchor = [1, -34];
 Icon.Default.prototype.options.shadowSize = [41, 41];
 
-// Create custom vehicle icon
+// Create custom vehicle icon - more realistic modern car
 const createVehicleIcon = (isMoving: boolean, heading: number = 0, vehicleId: string = 'V1') => {
   const color = isMoving ? '#10b981' : '#6b7280';
   const vehicleNumber = vehicleId.slice(-1) || '1';
   
   const svgIcon = `
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Drop shadow -->
-      <ellipse cx="24" cy="42" rx="18" ry="3" fill="rgba(0,0,0,0.15)"/>
+      <ellipse cx="25" cy="44" rx="20" ry="4" fill="rgba(0,0,0,0.2)"/>
       
       <!-- Background circle -->
-      <circle cx="24" cy="24" r="22" fill="white" stroke="${color}" stroke-width="3"/>
+      <circle cx="25" cy="25" r="23" fill="white" stroke="${color}" stroke-width="3" opacity="0.95"/>
       
       <!-- Car body rotated based on heading -->
-      <g transform="rotate(${heading} 24 24)">
-        <!-- Main car chassis -->
-        <rect x="18" y="16" width="12" height="10" rx="2" fill="${color}"/>
+      <g transform="rotate(${heading} 25 25)">
         
-        <!-- Car cabin/roof -->
-        <rect x="20" y="14" width="8" height="8" rx="2" fill="${color}" opacity="0.9"/>
+        <!-- Main car body (modern sedan shape) -->
+        <path d="M16 18 L34 18 Q36 18 36 20 L36 28 Q36 30 34 30 L16 30 Q14 30 14 28 L14 20 Q14 18 16 18 Z" 
+              fill="${color}" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
         
-        <!-- Front bumper -->
-        <rect x="17" y="18" width="1.5" height="6" rx="0.5" fill="${color}" opacity="0.9"/>
+        <!-- Car hood/front -->
+        <path d="M14 20 Q14 16 18 16 L32 16 Q36 16 36 20" 
+              fill="${color}" opacity="0.9"/>
         
-        <!-- Rear bumper -->
-        <rect x="29.5" y="18" width="1.5" height="6" rx="0.5" fill="${color}" opacity="0.9"/>
-        
-        <!-- Wheels (more realistic) -->
-        <circle cx="20" cy="27" r="2.2" fill="#2d3748"/>
-        <circle cx="28" cy="27" r="2.2" fill="#2d3748"/>
-        <circle cx="20" cy="13" r="2.2" fill="#2d3748"/>
-        <circle cx="28" cy="13" r="2.2" fill="#2d3748"/>
-        
-        <!-- Wheel rims -->
-        <circle cx="20" cy="27" r="1.3" fill="#4a5568"/>
-        <circle cx="28" cy="27" r="1.3" fill="#4a5568"/>
-        <circle cx="20" cy="13" r="1.3" fill="#4a5568"/>
-        <circle cx="28" cy="13" r="1.3" fill="#4a5568"/>
-        
-        <!-- Rim details -->
-        <circle cx="20" cy="27" r="0.6" fill="#718096"/>
-        <circle cx="28" cy="27" r="0.6" fill="#718096"/>
-        <circle cx="20" cy="13" r="0.6" fill="#718096"/>
-        <circle cx="28" cy="13" r="0.6" fill="#718096"/>
+        <!-- Car roof -->
+        <path d="M18 18 L32 18 Q34 18 34 20 L34 26 Q34 28 32 28 L18 28 Q16 28 16 26 L16 20 Q16 18 18 18 Z" 
+              fill="${color}" opacity="0.85"/>
         
         <!-- Front windshield -->
-        <rect x="21" y="15" width="6" height="2.5" rx="1" fill="rgba(135,206,235,0.8)"/>
+        <path d="M18 18 L32 18 Q33 18 33 19 L33 22 Q33 23 32 23 L18 23 Q17 23 17 22 L17 19 Q17 18 18 18 Z" 
+              fill="rgba(135,206,235,0.8)" stroke="rgba(0,0,0,0.1)" stroke-width="0.3"/>
+        
+        <!-- Rear windshield -->
+        <path d="M18 25 L32 25 Q33 25 33 26 L33 28 Q33 29 32 29 L18 29 Q17 29 17 28 L17 26 Q17 25 18 25 Z" 
+              fill="rgba(135,206,235,0.7)" stroke="rgba(0,0,0,0.1)" stroke-width="0.3"/>
         
         <!-- Side windows -->
-        <rect x="21" y="18" width="6" height="2.5" rx="1" fill="rgba(135,206,235,0.7)"/>
+        <rect x="17.5" y="19.5" width="3" height="3" rx="0.5" fill="rgba(135,206,235,0.6)"/>
+        <rect x="29.5" y="19.5" width="3" height="3" rx="0.5" fill="rgba(135,206,235,0.6)"/>
+        <rect x="17.5" y="25.5" width="3" height="2.5" rx="0.5" fill="rgba(135,206,235,0.6)"/>
+        <rect x="29.5" y="25.5" width="3" height="2.5" rx="0.5" fill="rgba(135,206,235,0.6)"/>
         
-        <!-- Rear window -->
-        <rect x="21" y="21" width="6" height="2" rx="1" fill="rgba(135,206,235,0.6)"/>
+        <!-- Wheels (more realistic with rims) -->
+        <circle cx="19" cy="32" r="3.5" fill="#2d3748" stroke="#1a202c" stroke-width="0.5"/>
+        <circle cx="31" cy="32" r="3.5" fill="#2d3748" stroke="#1a202c" stroke-width="0.5"/>
+        <circle cx="19" cy="14" r="3.5" fill="#2d3748" stroke="#1a202c" stroke-width="0.5"/>
+        <circle cx="31" cy="14" r="3.5" fill="#2d3748" stroke="#1a202c" stroke-width="0.5"/>
         
-        <!-- Headlights (active when moving) -->
+        <!-- Wheel rims -->
+        <circle cx="19" cy="32" r="2.2" fill="#4a5568"/>
+        <circle cx="31" cy="32" r="2.2" fill="#4a5568"/>
+        <circle cx="19" cy="14" r="2.2" fill="#4a5568"/>
+        <circle cx="31" cy="14" r="2.2" fill="#4a5568"/>
+        
+        <!-- Rim spokes -->
+        <g stroke="#718096" stroke-width="0.8" opacity="0.8">
+          <line x1="19" y1="30.2" x2="19" y2="33.8"/>
+          <line x1="17.2" y1="32" x2="20.8" y2="32"/>
+          <line x1="31" y1="30.2" x2="31" y2="33.8"/>
+          <line x1="29.2" y1="32" x2="32.8" y2="32"/>
+          <line x1="19" y1="12.2" x2="19" y2="15.8"/>
+          <line x1="17.2" y1="14" x2="20.8" y2="14"/>
+          <line x1="31" y1="12.2" x2="31" y2="15.8"/>
+          <line x1="29.2" y1="14" x2="32.8" y2="14"/>
+        </g>
+        
+        <!-- Headlights (brighter when moving) -->
         ${isMoving ? `
-        <ellipse cx="18.5" cy="17" rx="1.2" ry="1" fill="#FFD700" opacity="0.9"/>
-        <ellipse cx="18.5" cy="23" rx="1.2" ry="1" fill="#FFD700" opacity="0.9"/>
-        <ellipse cx="18.5" cy="17" rx="0.6" ry="0.5" fill="#FFF"/>
-        <ellipse cx="18.5" cy="23" rx="0.6" ry="0.5" fill="#FFF"/>
+        <ellipse cx="13" cy="18" rx="1.5" ry="2.5" fill="#FFD700" opacity="0.9"/>
+        <ellipse cx="13" cy="28" rx="1.5" ry="2.5" fill="#FFD700" opacity="0.9"/>
+        <ellipse cx="13" cy="18" rx="0.8" ry="1.3" fill="#FFF" opacity="0.8"/>
+        <ellipse cx="13" cy="28" rx="0.8" ry="1.3" fill="#FFF" opacity="0.8"/>
         ` : `
-        <ellipse cx="18.5" cy="17" rx="1.2" ry="1" fill="#e2e8f0"/>
-        <ellipse cx="18.5" cy="23" rx="1.2" ry="1" fill="#e2e8f0"/>
+        <ellipse cx="13" cy="18" rx="1.5" ry="2.5" fill="#e2e8f0" opacity="0.7"/>
+        <ellipse cx="13" cy="28" rx="1.5" ry="2.5" fill="#e2e8f0" opacity="0.7"/>
         `}
         
         <!-- Taillights -->
-        <ellipse cx="29.5" cy="17" rx="0.8" ry="0.8" fill="#DC2626" opacity="0.8"/>
-        <ellipse cx="29.5" cy="23" rx="0.8" ry="0.8" fill="#DC2626" opacity="0.8"/>
+        <ellipse cx="37" cy="18" rx="1" ry="2" fill="#DC2626" opacity="0.8"/>
+        <ellipse cx="37" cy="28" rx="1" ry="2" fill="#DC2626" opacity="0.8"/>
         
         <!-- Front grille -->
-        <rect x="17.2" y="19" width="0.6" height="2" fill="${color}" opacity="0.7"/>
-        <line x1="17.5" y1="19.5" x2="17.5" y2="20.5" stroke="white" stroke-width="0.2"/>
+        <rect x="12" y="21" width="1.5" height="4" rx="0.3" fill="${color}" opacity="0.8"/>
+        <line x1="12.2" y1="22" x2="13.3" y2="22" stroke="white" stroke-width="0.3" opacity="0.6"/>
+        <line x1="12.2" y1="23" x2="13.3" y2="23" stroke="white" stroke-width="0.3" opacity="0.6"/>
+        <line x1="12.2" y1="24" x2="13.3" y2="24" stroke="white" stroke-width="0.3" opacity="0.6"/>
         
-        <!-- Direction indicator (pointing forward) -->
-        <path d="M 16 20 L 14 20 L 15 18.5 L 15 21.5 Z" fill="${isMoving ? '#10b981' : '#6b7280'}" opacity="0.9"/>
+        <!-- Direction indicator arrow -->
+        <path d="M 10 23 L 7 23 L 8.5 20.5 L 8.5 25.5 Z" 
+              fill="${isMoving ? '#10b981' : '#6b7280'}" 
+              opacity="0.9" 
+              stroke="white" 
+              stroke-width="0.3"/>
+        
+        <!-- License plate area -->
+        <rect x="14.5" y="30.5" width="21" height="3" rx="0.5" fill="white" stroke="#ddd" stroke-width="0.5"/>
+        <text x="25" y="32.7" text-anchor="middle" font-size="6" font-weight="bold" fill="#333" font-family="Arial, sans-serif">GPS-${vehicleNumber}</text>
         
         <!-- Car antenna -->
-        <line x1="26" y1="14" x2="26" y2="12" stroke="${color}" stroke-width="0.5"/>
-        <circle cx="26" cy="11.5" r="0.3" fill="${color}"/>
+        <line x1="27" y1="16" x2="27" y2="13" stroke="${color}" stroke-width="0.8"/>
+        <circle cx="27" cy="12.5" r="0.5" fill="${color}"/>
       </g>
       
       <!-- Vehicle ID badge (top right) -->
-      <circle cx="38" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2.5"/>
-      <text x="38" y="13" text-anchor="middle" font-size="9" font-weight="bold" fill="white">${vehicleNumber}</text>
+      <circle cx="40" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2.5"/>
+      <text x="40" y="13.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">${vehicleNumber}</text>
       
       <!-- Status indicator (top left) -->
-      <circle cx="10" cy="10" r="5" fill="${isMoving ? '#10b981' : '#6b7280'}" stroke="white" stroke-width="2"/>
+      <circle cx="10" cy="10" r="6" fill="${isMoving ? '#10b981' : '#6b7280'}" stroke="white" stroke-width="2.5"/>
       ${isMoving ? `
-      <circle cx="10" cy="10" r="2.5" fill="white"/>
-      <circle cx="10" cy="10" r="1.5" fill="#10b981"/>
+      <circle cx="10" cy="10" r="3" fill="white"/>
+      <circle cx="10" cy="10" r="1.8" fill="#10b981"/>
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
       ` : `
-      <rect x="8" y="8" width="4" height="4" fill="white"/>
+      <rect x="7.5" y="7.5" width="5" height="5" rx="0.5" fill="white"/>
       `}
       
-      <!-- Speed indicator (bottom) -->
+      <!-- Speed/GPS indicator (bottom center) -->
       ${isMoving ? `
-      <rect x="20" y="40" width="8" height="3" rx="1.5" fill="${color}" opacity="0.8"/>
-      <text x="24" y="42.5" text-anchor="middle" font-size="6" fill="white">GPS</text>
-      ` : ''}
+      <rect x="18" y="42" width="14" height="4" rx="2" fill="${color}" opacity="0.9"/>
+      <text x="25" y="44.8" text-anchor="middle" font-size="7" font-weight="bold" fill="white">LIVE</text>
+      ` : `
+      <rect x="20" y="42" width="10" height="4" rx="2" fill="#9CA3AF" opacity="0.7"/>
+      <text x="25" y="44.8" text-anchor="middle" font-size="6" fill="white">OFF</text>
+      `}
     </svg>
   `;
   
   return new Icon({
     iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
-    iconSize: [48, 48],
-    iconAnchor: [24, 24],
-    popupAnchor: [0, -24]
+    iconSize: [50, 50],
+    iconAnchor: [25, 25],
+    popupAnchor: [0, -25]
   });
 };
 
