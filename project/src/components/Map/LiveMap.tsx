@@ -43,99 +43,139 @@ interface LiveMapProps {
   vehicleId?: string;
 }
 
-// Dummy vehicle simulation
-const DUMMY_ROUTE: Location[] = Array.from({ length: 16 }, (_, i) => ({
-  latitude: 28.6139 + (i * 0.0003),
-  longitude: 77.2090 + (i * 0.0003),
-  speed: 10, // slow speed, ~10km/h
-  heading: 45,
+// Dummy vehicle simulation - Bangalore coordinates
+const DUMMY_ROUTE: Location[] = Array.from({ length: 20 }, (_, i) => ({
+  latitude: 12.917936 + (i * 0.0005) * Math.cos(i * 0.3), // More realistic movement pattern
+  longitude: 77.592258 + (i * 0.0005) * Math.sin(i * 0.3),
+  speed: Math.random() * 40 + 20, // Random speed between 20-60 km/h
+  heading: (i * 18) % 360, // Varying direction
   timestamp: new Date(),
 }));
 
 const DUMMY_BASE: Omit<VehicleStatus, 'location'> = {
   vehicleId: 'dummy-vehicle',
-  isMoving: true,
-  batteryLevel: 65,
-  ignitionOn: true,
+  isMoving: false, // Start with ignition off
+  batteryLevel: 85,
+  ignitionOn: false, // Start with ignition off
   engineLocked: false,
-  gsmSignal: 85,
-  gpsSignal: 95,
+  gsmSignal: 92,
+  gpsSignal: 98,
   lastUpdate: new Date(),
 };
 
 const LiveMap: React.FC<LiveMapProps> = () => {
   const { vehicleStatus = {}, connected = false } = useSocket();
   const [routeHistory, setRouteHistory] = useState<Location[]>([]);
-  const [center, setCenter] = useState<LatLngTuple>([28.6139, 77.2090]);
+  const [center, setCenter] = useState<LatLngTuple>([12.917936, 77.592258]); // Bangalore coordinates
   const [isFollowing, setIsFollowing] = useState(true);
   const [showRoute, setShowRoute] = useState(true);
   const [dummyVehicle, setDummyVehicle] = useState<VehicleStatus | null>(null);
-  const [simulating, setSimulating] = useState(false);
+  const [routeIndex, setRouteIndex] = useState(0);
+  const [movementInterval, setMovementInterval] = useState<number | null>(null);
   const mapRef = useRef<any>(null);
 
   // Use first real vehicle, otherwise dummy
   const realVehicles = Object.values(vehicleStatus);
   const currentVehicle = realVehicles.length > 0 ? realVehicles[0] : dummyVehicle;
 
-  // Simulate dummy movement if no real vehicle
+  // Initialize dummy vehicle
   useEffect(() => {
-    console.log('LiveMap: Real vehicles count:', realVehicles.length);
-    console.log('LiveMap: Connected status:', connected);
-    console.log('LiveMap: Current simulating:', simulating);
-    
-    // Always start dummy simulation immediately for demo purposes
-    if (!simulating && !dummyVehicle) {
-      console.log('Starting dummy vehicle simulation...');
-      setSimulating(true);
-      let index = 0;
-      
+    if (!dummyVehicle) {
+      console.log('Initializing dummy vehicle at Bangalore coordinates...');
       const initialVehicle = {
         ...DUMMY_BASE,
         location: DUMMY_ROUTE[0],
         lastUpdate: new Date(),
       };
-      
       setDummyVehicle(initialVehicle);
       setRouteHistory([DUMMY_ROUTE[0]]);
       setCenter([DUMMY_ROUTE[0].latitude, DUMMY_ROUTE[0].longitude]);
-      
-      const interval = setInterval(() => {
-        index++;
-        console.log(`Moving dummy vehicle to position ${index}/${DUMMY_ROUTE.length}`);
-        
-        if (index >= DUMMY_ROUTE.length) {
-          console.log('Dummy vehicle reached end of route, stopping');
-          clearInterval(interval);
-          setSimulating(false);
-          setDummyVehicle((prev) =>
-            prev
-              ? { ...prev, isMoving: false, location: DUMMY_ROUTE[DUMMY_ROUTE.length - 1], lastUpdate: new Date() }
-              : null
-          );
-          return;
-        }
-        
-        const newVehicle = {
-          ...DUMMY_BASE,
-          isMoving: true,
-          location: DUMMY_ROUTE[index],
-          lastUpdate: new Date(),
-        };
-        
-        setDummyVehicle(newVehicle);
-        setRouteHistory((prev) => [...prev, DUMMY_ROUTE[index]]);
-        
-        if (isFollowing) {
-          setCenter([DUMMY_ROUTE[index].latitude, DUMMY_ROUTE[index].longitude]);
-        }
-      }, 1000); // Slower animation - 1 second intervals
-      
-      return () => {
-        console.log('Cleaning up dummy vehicle interval');
-        clearInterval(interval);
-      };
     }
-  }, [simulating, dummyVehicle, isFollowing]);
+  }, [dummyVehicle]);
+
+  // Handle ignition toggle and movement
+  const toggleIgnition = async () => {
+    if (!dummyVehicle) return;
+
+    const newIgnitionState = !dummyVehicle.ignitionOn;
+    console.log(`Toggling ignition: ${newIgnitionState ? 'ON' : 'OFF'}`);
+
+    // Update vehicle state immediately
+    const updatedVehicle = {
+      ...dummyVehicle,
+      ignitionOn: newIgnitionState,
+      isMoving: newIgnitionState,
+      lastUpdate: new Date(),
+    };
+    setDummyVehicle(updatedVehicle);
+
+    // Send ignition toggle to backend for trip tracking
+    try {
+      const response = await fetch('http://localhost:3001/toggle-ignition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+      console.log('Ignition toggle response:', result);
+    } catch (error) {
+      console.error('Error toggling ignition:', error);
+    }
+
+    if (newIgnitionState) {
+      // Start movement
+      startMovement();
+    } else {
+      // Stop movement
+      stopMovement();
+    }
+  };
+
+  const startMovement = () => {
+    if (movementInterval) return; // Already moving
+
+    console.log('Starting vehicle movement...');
+    let currentIndex = routeIndex;
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % DUMMY_ROUTE.length;
+      setRouteIndex(currentIndex);
+
+      const newLocation = DUMMY_ROUTE[currentIndex];
+      const updatedVehicle = {
+        ...DUMMY_BASE,
+        ignitionOn: true,
+        isMoving: true,
+        location: newLocation,
+        lastUpdate: new Date(),
+      };
+
+      setDummyVehicle(updatedVehicle);
+      setRouteHistory(prev => [...prev.slice(-50), newLocation]);
+
+      if (isFollowing) {
+        setCenter([newLocation.latitude, newLocation.longitude]);
+      }
+    }, 2000); // Move every 2 seconds
+
+    setMovementInterval(interval);
+  };
+
+  const stopMovement = () => {
+    if (movementInterval) {
+      console.log('Stopping vehicle movement...');
+      clearInterval(movementInterval);
+      setMovementInterval(null);
+    }
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (movementInterval) {
+        clearInterval(movementInterval);
+      }
+    };
+  }, [movementInterval]);
 
   // Real vehicle route history and center
   useEffect(() => {
@@ -251,6 +291,18 @@ const LiveMap: React.FC<LiveMapProps> = () => {
           >
             <Crosshair className="w-4 h-4" />
             <span>Center on Vehicle</span>
+          </button>
+          
+          <button
+            onClick={toggleIgnition}
+            className={clsx(
+              'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium',
+              currentVehicle?.ignitionOn 
+                ? 'bg-red-600 text-white hover:bg-red-700' 
+                : 'bg-green-600 text-white hover:bg-green-700'
+            )}
+          >
+            <span>{currentVehicle?.ignitionOn ? 'Turn OFF' : 'Turn ON'}</span>
           </button>
           
           <button

@@ -39,11 +39,71 @@ const TripHistory: React.FC<{ trips: Trip[], isLoading: boolean, onRefresh: () =
             trips.map((trip: any) => {
               const startTime = new Date(trip.startTime);
               const endTime = new Date(trip.endTime);
-              const duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000); // in minutes
+              const duration = trip.duration || Math.round((endTime.getTime() - startTime.getTime()) / 60000); // in minutes
+              const distance = trip.distance || 0;
 
               return (
                 <div key={trip.id} className="p-6">
-                  {/* ... existing trip rendering logic ... */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Trip #{trip.id.slice(-8)}</h3>
+                        <p className="text-sm text-gray-500">Vehicle: {trip.vehicleId}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">{distance.toFixed(1)} km</div>
+                      <div className="text-sm text-gray-500">{duration} min</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">Start</div>
+                        <div className="text-xs text-gray-500">
+                          {startTime.toLocaleDateString()} {startTime.toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {trip.startLocation?.latitude?.toFixed(6)}, {trip.startLocation?.longitude?.toFixed(6)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">End</div>
+                        <div className="text-xs text-gray-500">
+                          {endTime.toLocaleDateString()} {endTime.toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {trip.endLocation?.latitude?.toFixed(6)}, {trip.endLocation?.longitude?.toFixed(6)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{startTime.toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{duration} minutes</span>
+                      </div>
+                    </div>
+                    <div className={clsx(
+                      'px-2 py-1 rounded-full text-xs font-medium',
+                      trip.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    )}>
+                      {trip.status}
+                    </div>
+                  </div>
                 </div>
               );
             })
