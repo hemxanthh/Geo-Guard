@@ -5,7 +5,7 @@ import LoginForm from './components/Auth/LoginForm';
 import RegistrationForm from './components/Auth/RegistrationFormNew';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
-import Dashboard from './components/Dashboard/Dashboard';
+import DashboardEnhanced from './components/Dashboard/DashboardEnhanced';
 import LiveMap from './components/Map/LiveMap';
 import TripHistory from './components/Trips/TripHistory';
 import AlertsPanel from './components/Alerts/AlertsPanel';
@@ -68,8 +68,8 @@ const App: React.FC = () => {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        // Pass the fetchTrips function to the dashboard
-        return <Dashboard onTripCompleted={fetchTrips} />;
+        // Pass the page change function to the dashboard
+        return <DashboardEnhanced onPageChange={setCurrentPage} />;
       case 'live-map':
         return <LiveMap />;
       case 'trips':
@@ -82,7 +82,7 @@ const App: React.FC = () => {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard onTripCompleted={fetchTrips} />;
+        return <DashboardEnhanced onPageChange={setCurrentPage} />;
     }
   };
 
