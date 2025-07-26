@@ -180,11 +180,57 @@ app.post('/login', (req, res) => {
         const user = {
             id: row.id,
             username: row.username,
-            role: row.username === 'admin' ? 'admin' : 'user'
+            email: row.email || '',
+            phone: row.phone || '',
+            role: row.username === 'admin' ? 'admin' : 'user',
+            createdAt: row.createdAt || new Date().toISOString()
         };
         
         console.log('User logged in:', username);
         res.json({ user });
+    });
+});
+
+// Update user profile endpoint
+app.put('/user/:id', (req, res) => {
+    const { id } = req.params;
+    const { email, phone } = req.body;
+    
+    if (!id) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    const sql = `UPDATE users SET email = ?, phone = ? WHERE id = ?`;
+    
+    db.run(sql, [email, phone, id], function(err) {
+        if (err) {
+            console.error('Profile update error:', err.message);
+            return res.status(500).json({ error: 'Profile update failed' });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Return updated user info
+        db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, row) => {
+            if (err) {
+                console.error('Error fetching updated user:', err.message);
+                return res.status(500).json({ error: 'Failed to fetch updated user' });
+            }
+            
+            const user = {
+                id: row.id,
+                username: row.username,
+                email: row.email || '',
+                phone: row.phone || '',
+                role: row.username === 'admin' ? 'admin' : 'user',
+                createdAt: row.createdAt || new Date().toISOString()
+            };
+            
+            console.log('User profile updated:', row.username);
+            res.json({ user });
+        });
     });
 });
 
@@ -198,7 +244,7 @@ const db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to the SQLite database.');
     
     db.exec(`
-        CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE, password TEXT);
+        CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE, password TEXT, email TEXT, phone TEXT, createdAt TEXT DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS trips (id TEXT PRIMARY KEY, vehicleId TEXT, startTime TEXT, endTime TEXT, startLat REAL, startLon REAL, endLat REAL, endLon REAL, status TEXT);
     `, (err) => {
         if (err) {
