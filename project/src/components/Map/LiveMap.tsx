@@ -20,22 +20,112 @@ Icon.Default.prototype.options.popupAnchor = [1, -34];
 Icon.Default.prototype.options.shadowSize = [41, 41];
 
 // Create custom vehicle icon
-const createVehicleIcon = (isMoving: boolean, heading: number = 0) => {
+const createVehicleIcon = (isMoving: boolean, heading: number = 0, vehicleId: string = 'V1') => {
   const color = isMoving ? '#10b981' : '#6b7280';
+  const vehicleNumber = vehicleId.slice(-1) || '1';
+  
   const svgIcon = `
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="16" cy="16" r="15" fill="${color}" stroke="white" stroke-width="2"/>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" x="7" y="7" transform="rotate(${heading} 12 12)">
-        <path d="M12 2L22 20H2L12 2Z" fill="white"/>
-      </svg>
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Drop shadow -->
+      <ellipse cx="24" cy="42" rx="18" ry="3" fill="rgba(0,0,0,0.15)"/>
+      
+      <!-- Background circle -->
+      <circle cx="24" cy="24" r="22" fill="white" stroke="${color}" stroke-width="3"/>
+      
+      <!-- Car body rotated based on heading -->
+      <g transform="rotate(${heading} 24 24)">
+        <!-- Main car chassis -->
+        <rect x="18" y="16" width="12" height="10" rx="2" fill="${color}"/>
+        
+        <!-- Car cabin/roof -->
+        <rect x="20" y="14" width="8" height="8" rx="2" fill="${color}" opacity="0.9"/>
+        
+        <!-- Front bumper -->
+        <rect x="17" y="18" width="1.5" height="6" rx="0.5" fill="${color}" opacity="0.9"/>
+        
+        <!-- Rear bumper -->
+        <rect x="29.5" y="18" width="1.5" height="6" rx="0.5" fill="${color}" opacity="0.9"/>
+        
+        <!-- Wheels (more realistic) -->
+        <circle cx="20" cy="27" r="2.2" fill="#2d3748"/>
+        <circle cx="28" cy="27" r="2.2" fill="#2d3748"/>
+        <circle cx="20" cy="13" r="2.2" fill="#2d3748"/>
+        <circle cx="28" cy="13" r="2.2" fill="#2d3748"/>
+        
+        <!-- Wheel rims -->
+        <circle cx="20" cy="27" r="1.3" fill="#4a5568"/>
+        <circle cx="28" cy="27" r="1.3" fill="#4a5568"/>
+        <circle cx="20" cy="13" r="1.3" fill="#4a5568"/>
+        <circle cx="28" cy="13" r="1.3" fill="#4a5568"/>
+        
+        <!-- Rim details -->
+        <circle cx="20" cy="27" r="0.6" fill="#718096"/>
+        <circle cx="28" cy="27" r="0.6" fill="#718096"/>
+        <circle cx="20" cy="13" r="0.6" fill="#718096"/>
+        <circle cx="28" cy="13" r="0.6" fill="#718096"/>
+        
+        <!-- Front windshield -->
+        <rect x="21" y="15" width="6" height="2.5" rx="1" fill="rgba(135,206,235,0.8)"/>
+        
+        <!-- Side windows -->
+        <rect x="21" y="18" width="6" height="2.5" rx="1" fill="rgba(135,206,235,0.7)"/>
+        
+        <!-- Rear window -->
+        <rect x="21" y="21" width="6" height="2" rx="1" fill="rgba(135,206,235,0.6)"/>
+        
+        <!-- Headlights (active when moving) -->
+        ${isMoving ? `
+        <ellipse cx="18.5" cy="17" rx="1.2" ry="1" fill="#FFD700" opacity="0.9"/>
+        <ellipse cx="18.5" cy="23" rx="1.2" ry="1" fill="#FFD700" opacity="0.9"/>
+        <ellipse cx="18.5" cy="17" rx="0.6" ry="0.5" fill="#FFF"/>
+        <ellipse cx="18.5" cy="23" rx="0.6" ry="0.5" fill="#FFF"/>
+        ` : `
+        <ellipse cx="18.5" cy="17" rx="1.2" ry="1" fill="#e2e8f0"/>
+        <ellipse cx="18.5" cy="23" rx="1.2" ry="1" fill="#e2e8f0"/>
+        `}
+        
+        <!-- Taillights -->
+        <ellipse cx="29.5" cy="17" rx="0.8" ry="0.8" fill="#DC2626" opacity="0.8"/>
+        <ellipse cx="29.5" cy="23" rx="0.8" ry="0.8" fill="#DC2626" opacity="0.8"/>
+        
+        <!-- Front grille -->
+        <rect x="17.2" y="19" width="0.6" height="2" fill="${color}" opacity="0.7"/>
+        <line x1="17.5" y1="19.5" x2="17.5" y2="20.5" stroke="white" stroke-width="0.2"/>
+        
+        <!-- Direction indicator (pointing forward) -->
+        <path d="M 16 20 L 14 20 L 15 18.5 L 15 21.5 Z" fill="${isMoving ? '#10b981' : '#6b7280'}" opacity="0.9"/>
+        
+        <!-- Car antenna -->
+        <line x1="26" y1="14" x2="26" y2="12" stroke="${color}" stroke-width="0.5"/>
+        <circle cx="26" cy="11.5" r="0.3" fill="${color}"/>
+      </g>
+      
+      <!-- Vehicle ID badge (top right) -->
+      <circle cx="38" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2.5"/>
+      <text x="38" y="13" text-anchor="middle" font-size="9" font-weight="bold" fill="white">${vehicleNumber}</text>
+      
+      <!-- Status indicator (top left) -->
+      <circle cx="10" cy="10" r="5" fill="${isMoving ? '#10b981' : '#6b7280'}" stroke="white" stroke-width="2"/>
+      ${isMoving ? `
+      <circle cx="10" cy="10" r="2.5" fill="white"/>
+      <circle cx="10" cy="10" r="1.5" fill="#10b981"/>
+      ` : `
+      <rect x="8" y="8" width="4" height="4" fill="white"/>
+      `}
+      
+      <!-- Speed indicator (bottom) -->
+      ${isMoving ? `
+      <rect x="20" y="40" width="8" height="3" rx="1.5" fill="${color}" opacity="0.8"/>
+      <text x="24" y="42.5" text-anchor="middle" font-size="6" fill="white">GPS</text>
+      ` : ''}
     </svg>
   `;
   
   return new Icon({
     iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+    popupAnchor: [0, -24]
   });
 };
 
@@ -363,7 +453,7 @@ const LiveMap: React.FC<LiveMapProps> = () => {
             {/* Vehicle Marker */}
             <Marker
               position={[currentVehicle.location.latitude, currentVehicle.location.longitude]}
-              icon={createVehicleIcon(currentVehicle.isMoving, currentVehicle.location.heading)}
+              icon={createVehicleIcon(currentVehicle.isMoving, currentVehicle.location.heading, currentVehicle.vehicleId)}
             >
               <Popup>
                 <div className="space-y-2">
