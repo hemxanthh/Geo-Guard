@@ -24,9 +24,13 @@ process.on('unhandledRejection', (reason, promise) => {
 let activeTripId = null;
 const vehicleStatus = {
   vehicleId: 'vehicle-1-demo',
-  location: { latitude: 12.9716, longitude: 77.5946, speed: 0, heading: 0, timestamp: new Date() },
+  location: { latitude: 12.917936, longitude: 77.592258, speed: 0, heading: 0, timestamp: new Date() }, // Bangalore coordinates
   ignitionOn: false,
   isMoving: false,
+  batteryLevel: 85,
+  engineLocked: false,
+  gsmSignal: 92,
+  gpsSignal: 98,
   lastUpdate: new Date(),
 };
 
@@ -95,9 +99,38 @@ app.post('/toggle-ignition', (req, res) => {
 });
 
 app.get('/trips', (req, res) => {
-    db.all(`SELECT * FROM trips WHERE status = 'completed' ORDER BY startTime DESC`, [], (err, rows) => {
+    db.all(`SELECT * FROM trips WHERE status = 'completed' ORDER BY startTime DESC LIMIT 20`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+        
+        // Format the trips data for better display
+        const formattedTrips = rows.map(trip => ({
+            id: trip.id,
+            vehicleId: trip.vehicleId,
+            startTime: trip.startTime,
+            endTime: trip.endTime,
+            startLocation: {
+                latitude: trip.startLat,
+                longitude: trip.startLon,
+                timestamp: new Date(trip.startTime)
+            },
+            endLocation: {
+                latitude: trip.endLat,
+                longitude: trip.endLon,
+                timestamp: new Date(trip.endTime)
+            },
+            status: trip.status,
+            // Calculate duration in minutes
+            duration: trip.endTime ? Math.round((new Date(trip.endTime) - new Date(trip.startTime)) / (1000 * 60)) : 0,
+            // Calculate distance (rough estimate)
+            distance: trip.startLat && trip.endLat ? 
+                Math.round(Math.sqrt(
+                    Math.pow(trip.endLat - trip.startLat, 2) + 
+                    Math.pow(trip.endLon - trip.startLon, 2)
+                ) * 111000) / 1000 : 0 // Convert to km
+        }));
+        
+        console.log(`Returning ${formattedTrips.length} trips`);
+        res.json(formattedTrips);
     });
 });
 
