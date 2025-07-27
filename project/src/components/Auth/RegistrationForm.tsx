@@ -42,7 +42,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSwitchToLogin }) 
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Create Your Account</h1>
-          <p className="text-blue-100">Join VehicleGuard Pro</p>
+          <p className="text-blue-100">Geo Guard-X</p>
         </div>
 
         {/* Registration Form */}

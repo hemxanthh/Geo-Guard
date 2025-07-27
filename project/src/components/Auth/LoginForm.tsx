@@ -21,6 +21,14 @@ const LoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchToReg
 
     const result = await login(username, password);
     console.log('Login result:', result);
+    if (!result.success) {
+  if (result.error?.toLowerCase().includes('password')) {
+    setError('Password is incorrect. Try again.');
+  } else {
+    setError(result.error || 'Login failed');
+  }
+}
+
     
     if (!result.success) {
       console.error('Setting error:', result.error);

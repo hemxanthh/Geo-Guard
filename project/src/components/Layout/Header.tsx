@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Settings, User, LogOut, Shield } from 'lucide-react';
+import { Menu, Bell, Settings, User, LogOut, Shield, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { clsx } from 'clsx';
 
 interface HeaderProps {
   onMenuClick: () => void;
+  onPageChange?: (page: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+const Header: React.FC<HeaderProps> = ({ onMenuClick, onPageChange }) => {
   const { user, logout } = useAuth();
   const { alerts, connected } = useSocket();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const unreadAlerts = alerts.filter(alert => !alert.isRead).length;
+
+  const handleAdminAccess = () => {
+    if (onPageChange) {
+      onPageChange('admin');
+    }
+    setShowUserMenu(false);
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-30">
@@ -33,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">YOUR VEHICLE YOUR SAFETY</h1>
+              <h1 className="text-xl font-bold text-gray-900">Advanced Vehicle Tracking And Security</h1>
             </div>
           </div>
         </div>
@@ -127,8 +135,23 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 <div className="p-3 border-b border-gray-100">
                   <p className="font-medium text-gray-900">{user?.username}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>
+                  {user?.role === 'admin' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Administrator
+                    </span>
+                  )}
                 </div>
-                <div className="p-2">
+                <div className="p-2 space-y-1">
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={handleAdminAccess}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-lg hover:bg-gray-50 text-purple-600 transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>Admin Dashboard</span>
+                    </button>
+                  )}
                   <button
                     onClick={logout}
                     className="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-lg hover:bg-gray-50 text-red-600 transition-colors"

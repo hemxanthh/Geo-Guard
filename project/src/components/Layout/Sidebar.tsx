@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Home, Map, History, AlertTriangle, Car, Settings, Shield } from 'lucide-react';
+import { X, Home, Map, History, AlertTriangle, Car, Settings, Shield, Crown } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,17 +10,27 @@ interface SidebarProps {
   onPageChange: (page: string) => void;
 }
 
-const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, description: 'Overview & stats' },
-  { id: 'live-map', label: 'Live Tracking', icon: Map, description: 'Real-time location' },
-  { id: 'trips', label: 'Trip History', icon: History, description: 'Past journeys' },
-  { id: 'alerts', label: 'Alerts', icon: AlertTriangle, description: 'Security notifications' },
-  { id: 'vehicles', label: 'Vehicles', icon: Car, description: 'Manage fleet' },
-  { id: 'remote', label: 'Remote Control', icon: Shield, description: 'Engine controls' },
-  { id: 'settings', label: 'Settings', icon: Settings, description: 'Preferences' },
-];
-
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, onPageChange }) => {
+  const { user } = useAuth();
+  
+  const baseMenuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Home, description: 'Overview & stats' },
+    { id: 'live-map', label: 'Live Tracking', icon: Map, description: 'Real-time location' },
+    { id: 'trips', label: 'Trip History', icon: History, description: 'Past journeys' },
+    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, description: 'Security notifications' },
+    { id: 'vehicles', label: 'Vehicles', icon: Car, description: 'Manage fleet' },
+    { id: 'remote', label: 'Remote Control', icon: Shield, description: 'Engine controls' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Preferences' },
+  ];
+
+  // Add admin menu item for admin users
+  const menuItems = user?.role === 'admin' 
+    ? [
+        ...baseMenuItems.slice(0, 1), // Dashboard
+        { id: 'admin', label: 'Admin Panel', icon: Crown, description: 'System administration' },
+        ...baseMenuItems.slice(1), // Rest of the items
+      ]
+    : baseMenuItems;
   const handlePageClick = (pageId: string) => {
     onPageChange(pageId);
     onClose();
@@ -75,24 +86,42 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, onPageC
                     'w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200',
                     'text-left group',
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? item.id === 'admin'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                        : 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                      : item.id === 'admin'
+                        ? 'text-purple-600 hover:bg-purple-50 hover:text-purple-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   )}
                 >
                   <Icon className={clsx(
                     'w-5 h-5 transition-colors',
-                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'
+                    isActive 
+                      ? 'text-white' 
+                      : item.id === 'admin'
+                        ? 'text-purple-400 group-hover:text-purple-600'
+                        : 'text-gray-400 group-hover:text-gray-600'
                   )} />
                   <div className="flex-1">
                     <div className={clsx(
                       'font-medium',
-                      isActive ? 'text-white' : 'text-gray-900'
+                      isActive 
+                        ? 'text-white' 
+                        : item.id === 'admin'
+                          ? 'text-purple-700'
+                          : 'text-gray-900'
                     )}>
                       {item.label}
                     </div>
                     <div className={clsx(
                       'text-sm',
-                      isActive ? 'text-blue-100' : 'text-gray-500'
+                      isActive 
+                        ? item.id === 'admin'
+                          ? 'text-purple-100'
+                          : 'text-blue-100'
+                        : item.id === 'admin'
+                          ? 'text-purple-500'
+                          : 'text-gray-500'
                     )}>
                       {item.description}
                     </div>
