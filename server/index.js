@@ -70,14 +70,18 @@ let activeTripId = null;
 let vehicleState = {
     id: 'vehicle_001',
     location: {
-        lat: 40.7128,
-        lng: -74.0060
+        lat: 12.917795,
+        lng: 77.592319,
+        latitude: 12.917795,
+        longitude: 77.592319
     },
     status: 'idle',
     speed: 0,
     direction: 0,
     fuel: 85,
     engine: false,
+    ignitionOn: false,
+    isMoving: false,
     doors: { front: false, rear: false },
     ac: false,
     lights: false,
@@ -100,14 +104,29 @@ io.on('connection', (socket) => {
 
 // Simulate vehicle movement and updates
 function simulateVehicleMovement() {
-    // Random movement within a small area
-    const deltaLat = (Math.random() - 0.5) * 0.001;
-    const deltaLng = (Math.random() - 0.5) * 0.001;
+    // Only move vehicle if ignition is on
+    if (vehicleState.ignitionOn || vehicleState.engine) {
+        // Random movement within a small area
+        const deltaLat = (Math.random() - 0.5) * 0.001;
+        const deltaLng = (Math.random() - 0.5) * 0.001;
+        
+        vehicleState.location.lat += deltaLat;
+        vehicleState.location.lng += deltaLng;
+        // Also set latitude and longitude for frontend compatibility
+        vehicleState.location.latitude = vehicleState.location.lat;
+        vehicleState.location.longitude = vehicleState.location.lng;
+        
+        vehicleState.speed = Math.random() * 60; // 0-60 km/h when moving
+        vehicleState.direction = Math.random() * 360; // 0-360 degrees
+        vehicleState.isMoving = true;
+        vehicleState.status = 'moving';
+    } else {
+        // Vehicle is stationary when ignition is off
+        vehicleState.speed = 0;
+        vehicleState.isMoving = false;
+        vehicleState.status = 'idle';
+    }
     
-    vehicleState.location.lat += deltaLat;
-    vehicleState.location.lng += deltaLng;
-    vehicleState.speed = Math.random() * 60; // 0-60 mph
-    vehicleState.direction = Math.random() * 360; // 0-360 degrees
     vehicleState.lastUpdate = new Date().toISOString();
     
     // Emit update to all connected clients
@@ -248,6 +267,51 @@ app.put('/user/:id', async (req, res) => {
         console.error('Profile update error:', error.message);
         res.status(500).json({ error: 'Profile update failed' });
     }
+});
+
+// Additional API endpoints for dashboard functionality
+
+// Toggle ignition endpoint
+app.post('/toggle-ignition', (req, res) => {
+    vehicleState.engine = !vehicleState.engine;
+    vehicleState.ignitionOn = vehicleState.engine; // Add ignitionOn for frontend compatibility
+    vehicleState.lastUpdate = new Date().toISOString();
+    
+    // Emit update to all connected clients
+    io.emit('vehicleUpdate', vehicleState);
+    
+    res.json({ 
+        success: true,
+        message: `Engine ${vehicleState.engine ? 'started' : 'stopped'}`,
+        ignitionOn: vehicleState.engine 
+    });
+});
+
+// Get trips endpoint  
+app.get('/trips', (req, res) => {
+    db.all('SELECT * FROM trips ORDER BY startTime DESC', (err, rows) => {
+        if (err) {
+            console.error('Error fetching trips:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch trips' });
+        }
+        
+        // Add some mock data if no trips exist
+        if (rows.length === 0) {
+            const mockTrips = [
+                {
+                    id: 1,
+                    startTime: new Date(Date.now() - 3600000).toISOString(),
+                    endTime: new Date().toISOString(),
+                    distance: 12.5,
+                    duration: 3600,
+                    status: 'completed'
+                }
+            ];
+            return res.json(mockTrips);
+        }
+        
+        res.json(rows);
+    });
 });
 
 // --- Database and Server Initialization ---

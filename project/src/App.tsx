@@ -2,10 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 import LoginForm from './components/Auth/LoginForm';
-import RegistrationForm from './components/Auth/RegistrationFormNew';
+import RegistrationForm from './components/Auth/RegistrationForm';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
-import DashboardEnhanced from './components/Dashboard/DashboardEnhanced';
+import Dashboard from './components/Dashboard/Dashboard';
 import LiveMap from './components/Map/LiveMap';
 import TripHistory from './components/Trips/TripHistory';
 import AlertsPanel from './components/Alerts/AlertsPanel';
@@ -69,7 +69,7 @@ const App: React.FC = () => {
     switch (currentPage) {
       case 'dashboard':
         // Pass the page change function to the dashboard
-        return <DashboardEnhanced onPageChange={setCurrentPage} />;
+        return <Dashboard onPageChange={setCurrentPage} />;
       case 'live-map':
         return <LiveMap />;
       case 'trips':
@@ -82,7 +82,7 @@ const App: React.FC = () => {
       case 'settings':
         return <Settings />;
       default:
-        return <DashboardEnhanced onPageChange={setCurrentPage} />;
+        return <Dashboard onPageChange={setCurrentPage} />;
     }
   };
 

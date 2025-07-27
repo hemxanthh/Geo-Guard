@@ -23,13 +23,16 @@ export interface Vehicle {
 }
 
 export interface Location {
-  latitude: number;
-  longitude: number;
+  // Support both formats for compatibility
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
   accuracy?: number;
   altitude?: number;
   speed?: number;
   heading?: number;
-  timestamp: Date;
+  timestamp?: Date;
   address?: string;
 }
 

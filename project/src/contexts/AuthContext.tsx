@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/login', {
+      const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log("Attempting to register user via backend:", { username });
 
     try {
-        const response = await fetch('http://localhost:3001/register', {
+        const response = await fetch('http://localhost:3001/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
