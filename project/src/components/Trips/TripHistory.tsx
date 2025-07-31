@@ -37,9 +37,9 @@ const TripHistory: React.FC<{ trips: Trip[], isLoading: boolean, onRefresh: () =
             </div>
           ) : (
             trips.map((trip: any) => {
-              const startTime = new Date(trip.startTime);
-              const endTime = new Date(trip.endTime);
-              const duration = trip.duration || Math.round((endTime.getTime() - startTime.getTime()) / 60000); // in minutes
+              const startTime = trip.startTime ? new Date(trip.startTime) : new Date();
+              const endTime = trip.endTime ? new Date(trip.endTime) : new Date();
+              const duration = trip.duration || (trip.endTime && trip.startTime ? Math.round((endTime.getTime() - startTime.getTime()) / 60000) : 0); // in minutes
               const distance = trip.distance || 0;
 
               return (
@@ -48,7 +48,7 @@ const TripHistory: React.FC<{ trips: Trip[], isLoading: boolean, onRefresh: () =
                     <div className="flex items-center space-x-3">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                       <div>
-                        <h3 className="font-medium text-gray-900">Trip #{trip.id.slice(-8)}</h3>
+                        <h3 className="font-medium text-gray-900">Trip #{String(trip.id).slice(-8)}</h3>
                         <p className="text-sm text-gray-500">Vehicle: {trip.vehicleId}</p>
                       </div>
                     </div>
@@ -67,7 +67,9 @@ const TripHistory: React.FC<{ trips: Trip[], isLoading: boolean, onRefresh: () =
                           {startTime.toLocaleDateString()} {startTime.toLocaleTimeString()}
                         </div>
                         <div className="text-xs text-gray-400">
-                          {trip.startLocation?.latitude?.toFixed(6)}, {trip.startLocation?.longitude?.toFixed(6)}
+                          {trip.startLocation?.latitude && trip.startLocation?.longitude 
+                            ? `${trip.startLocation.latitude.toFixed(6)}, ${trip.startLocation.longitude.toFixed(6)}`
+                            : 'Location not available'}
                         </div>
                       </div>
                     </div>
@@ -80,7 +82,9 @@ const TripHistory: React.FC<{ trips: Trip[], isLoading: boolean, onRefresh: () =
                           {endTime.toLocaleDateString()} {endTime.toLocaleTimeString()}
                         </div>
                         <div className="text-xs text-gray-400">
-                          {trip.endLocation?.latitude?.toFixed(6)}, {trip.endLocation?.longitude?.toFixed(6)}
+                          {trip.endLocation?.latitude && trip.endLocation?.longitude 
+                            ? `${trip.endLocation.latitude.toFixed(6)}, ${trip.endLocation.longitude.toFixed(6)}`
+                            : 'Location not available'}
                         </div>
                       </div>
                     </div>
