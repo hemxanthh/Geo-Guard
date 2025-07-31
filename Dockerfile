@@ -1,6 +1,9 @@
 # Use official Node.js runtime as base image
 FROM node:20-alpine
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Set working directory
 WORKDIR /app
 
@@ -11,7 +14,7 @@ COPY project/package*.json ./project/
 
 # Install dependencies
 RUN npm install
-RUN cd server && npm install
+RUN cd server && npm install && npm rebuild sqlite3
 RUN cd project && npm install
 
 # Copy source code
