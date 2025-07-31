@@ -1,17 +1,20 @@
 {
-  "name": "server",
+  "name": "geoguard-server",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "prod": "NODE_ENV=production node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["vehicle-tracking", "gps", "fleet-management"],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Geo Guard Vehicle Tracking System - Backend Server",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "socket.io": "^4.8.1",
     "sqlite3": "^5.1.7"

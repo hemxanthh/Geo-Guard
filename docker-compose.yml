@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  geoguard-app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_URL=sqlite:./database.db
+    volumes:
+      - ./database.db:/app/database.db
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add PostgreSQL for production
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: geoguard
+  #     POSTGRES_USER: geoguard_user
+  #     POSTGRES_PASSWORD: secure_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+  # Optional: Add Redis for session management
+  # redis:
+  #   image: redis:7-alpine
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis_data:/data
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+
+# Optional: Define volumes
+# volumes:
+#   postgres_data:
+#   redis_data:

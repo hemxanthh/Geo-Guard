@@ -3,25 +3,61 @@ const http = require('http');
 const { Server } = require("socket.io");
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+
+// Production-ready CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.CORS_ORIGIN, 'https://yourdomain.com']
+    : ["http://localhost:5173", "http://localhost:5174", "http://localhost:4173"],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: corsOptions
 });
 
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Security headers for production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+  });
+}
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../project/dist')));
+}
 
 const PORT = process.env.PORT || 3001;
 
+// Enhanced logging
+const log = (level, message, data = {}) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}`, data);
+};
+
 // Add error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  log('error', 'Uncaught Exception:', error);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  log('error', 'Unhandled Rejection at:', { promise, reason });
 });
 
 // Database helper function with retry logic
@@ -357,22 +393,40 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
                 acknowledged INTEGER DEFAULT 0
             )`);
             
-            console.log('Database tables are ready.');
+            log('info', 'Database tables are ready.');
         });
     };
     
     createTables();
 });
 
+// Serve React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../project/dist/index.html'));
+  });
+}
+
+// Health check endpoint for production monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV,
+    version: require('../package.json').version || '1.0.0'
+  });
+});
+
 // Graceful shutdown
 process.on('SIGINT', () => {
-    console.log('\nShutting down gracefully...');
+    log('info', 'Shutting down gracefully...');
     if (db) {
         db.close((err) => {
             if (err) {
-                console.error('Error closing database:', err.message);
+                log('error', 'Error closing database:', err.message);
             } else {
-                console.log('Database connection closed.');
+                log('info', 'Database connection closed.');
             }
             process.exit(0);
         });
@@ -382,7 +436,7 @@ process.on('SIGINT', () => {
 });
 
 process.on('SIGTERM', () => {
-    console.log('Received SIGTERM, shutting down gracefully...');
+    log('info', 'Received SIGTERM, shutting down gracefully...');
     if (db) {
         db.close(() => {
             process.exit(0);
@@ -394,9 +448,10 @@ process.on('SIGTERM', () => {
 
 // Start server
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    log('info', `🚀 Geo Guard server is running on http://localhost:${PORT}`);
+    log('info', `Environment: ${process.env.NODE_ENV || 'development'}`);
     
     // Start vehicle simulation
     setInterval(simulateVehicleMovement, 2000);
-    console.log('Vehicle simulation started.');
+    log('info', 'Vehicle simulation started.');
 });
