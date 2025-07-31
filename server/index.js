@@ -313,7 +313,13 @@ app.get('/api/trips', (req, res) => {
 
 // Serve React app in production
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  // Handle specific routes that should serve the React app
+  app.get(['/', '/dashboard', '/login', '/register', '/settings', '/trips'], (req, res) => {
+    res.sendFile(path.join(__dirname, '../project/dist/index.html'));
+  });
+  
+  // Fallback for any other non-API routes
+  app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(__dirname, '../project/dist/index.html'));
   });
 }
