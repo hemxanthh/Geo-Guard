@@ -1,0 +1,21 @@
+{
+  "builds": [
+    {
+      "src": "project/package.json",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "**"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/project/dist/$1"
+    }
+  ]
+}
