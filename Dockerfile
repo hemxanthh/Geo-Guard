@@ -14,7 +14,7 @@ COPY project/package*.json ./project/
 
 # Install dependencies
 RUN npm install
-RUN cd server && npm install && npm rebuild sqlite3
+RUN cd server && npm install && npm rebuild better-sqlite3
 RUN cd project && npm install
 
 # Copy source code
