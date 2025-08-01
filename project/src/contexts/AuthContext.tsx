@@ -1,5 +1,6 @@
 // project/src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { buildApiUrl } from '../config/api';
 import { User } from '../types';
 
 // Defines the shape of the data and functions available in the context
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch(buildApiUrl('/api/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log("Attempting to register user via backend:", { username });
 
     try {
-        const response = await fetch('http://localhost:3001/auth/register', {
+        const response = await fetch(buildApiUrl('/api/register'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const updateUser = async (userData: Partial<User>) => {
     if (user) {
       try {
-        const response = await fetch(`http://localhost:3001/user/${user.id}`, {
+        const response = await fetch(buildApiUrl(`/api/users/${user.id}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

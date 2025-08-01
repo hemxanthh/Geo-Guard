@@ -4,6 +4,7 @@ import { LatLngTuple } from 'leaflet';
 import { Icon } from 'leaflet';
 import { useSocket } from '../../contexts/SocketContext';
 import { Power, Navigation, Route, Unlock } from 'lucide-react';
+import { buildApiUrl } from '../../config/api';
 import clsx from 'clsx';
 import 'leaflet/dist/leaflet.css';
 
@@ -150,7 +151,7 @@ export default function LiveMap() {
         ...prev.slice(0, 4)
       ]);
 
-      const response = await fetch('http://localhost:3001/toggle-ignition', {
+      const response = await fetch(buildApiUrl('/toggle-ignition'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,12 +1,14 @@
 // API Configuration for different environments
+const currentDomain = typeof window !== 'undefined' ? window.location.origin : '';
+
 export const API_CONFIG = {
   development: {
     baseURL: 'http://localhost:3001',
     socketURL: 'http://localhost:3001'
   },
   production: {
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://yourdomain.com/api',
-    socketURL: import.meta.env.VITE_SOCKET_URL || 'https://yourdomain.com'
+    baseURL: import.meta.env.VITE_API_BASE_URL || currentDomain,
+    socketURL: import.meta.env.VITE_SOCKET_URL || currentDomain
   }
 };
 

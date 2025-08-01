@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { VehicleStatus, Alert, Trip } from '../types';
+import { SOCKET_URL } from '../config/api';
 
 interface SocketContextType {
   connected: boolean;
@@ -44,7 +45,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     // Now the 'if (user)' check will work correctly.
     if (user) {
-      const newSocket = io('http://localhost:3001');
+      const newSocket = io(SOCKET_URL);
       setSocket(newSocket);
 
       newSocket.on('connect', () => {
